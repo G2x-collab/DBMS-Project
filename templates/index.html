@@ -1,9 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Virus Database Command Center</title>
+
+    <script>
+        function deleteVirus(event, virusId) {
+            event.preventDefault();
+    
+            if (!confirm("Are you sure you want to delete this entry?")) return;
+    
+            fetch(`/api/delete/${virusId}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        location.reload(); 
+                    } else {
+                        alert("Error: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        }
+    </script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -57,12 +78,38 @@
         }
 
         .table-container {
+            position: relative;
             background: #262626;
             border-radius: 10px;
             box-shadow: 0px 4px 8px rgba(255, 0, 0, 0.3);
             padding: 20px;
             overflow-x: auto;
             max-width: 90%;
+        }
+
+        /* Fix cog positioning */
+        .cog-icon {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        @keyframes rotateCog {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .cog-icon:hover {
+            animation: rotateCog 10s linear infinite;
         }
 
         table {
@@ -72,7 +119,8 @@
             color: white;
         }
 
-        th, td {
+        th,
+        td {
             border: 2px solid white;
             padding: 10px;
             text-align: left;
@@ -111,11 +159,15 @@
         }
     </style>
 </head>
+
 <body>
     <h1>Virus Database Command Center</h1>
     <p>By Vishnusagar, Nihal, Sucheendranadh</p>
     <div class="dashboard">
         <div class="table-container">
+            <a href="/add">
+                <span class="cog-icon">⚙️</span>
+            </a>
             <h2>Viruses</h2>
             <p class="relationship">[Entity] Connected to Behaviors, Effects, and Operating Systems</p>
             <table>
@@ -129,6 +181,7 @@
                         <th>Spread Rate</th>
                         <th>Infection Method</th>
                         <th>Damage Potential</th>
+                        <th>Actions</th> <!-- New Column for Delete -->
                     </tr>
                 </thead>
                 <tbody>
@@ -142,6 +195,11 @@
                         <td>{{ virus.spread_rate }}</td>
                         <td>{{ virus.infection_method }}</td>
                         <td>{{ virus.damage_potential }}</td>
+                        <td>
+                            <form onsubmit="deleteVirus(event, {{ virus.virus_id }})">
+                                <button type="submit" class="delete-btn">❌ Delete</button>
+                            </form>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -150,6 +208,9 @@
         
         <div class="table-container">
             <h2>Operating Systems</h2>
+            <a href="/add">
+                <span class="cog-icon">⚙️</span>
+            </a>
             <p class="relationship">[Entity] 1:N Relationship with Devices</p>
             <table>
                 <thead>
@@ -174,9 +235,12 @@
                 </tbody>
             </table>
         </div>
-        
+
         <div class="table-container">
             <h2>Devices</h2>
+            <a href="/add">
+                <span class="cog-icon">⚙️</span>
+            </a>
             <p class="relationship">[Entity] Many Devices belong to One OS (1:N)</p>
             <table>
                 <thead>
@@ -201,9 +265,12 @@
                 </tbody>
             </table>
         </div>
-        
+
         <div class="table-container">
             <h2>Behaviors</h2>
+            <a href="/add">
+                <span class="cog-icon">⚙️</span>
+            </a>
             <p class="relationship">[Entity] 1 Virus has Many Behaviors (1:N)</p>
             <table>
                 <thead>
@@ -232,9 +299,12 @@
                 </tbody>
             </table>
         </div>
-        
+
         <div class="table-container">
             <h2>Effects</h2>
+            <a href="/add">
+                <span class="cog-icon">⚙️</span>
+            </a>
             <p class="relationship">[Entity] 1 Virus can cause Multiple Effects (1:N)</p>
             <table>
                 <thead>
@@ -259,12 +329,15 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Schema Section -->
         <div class="table-container">
+            <a href="/add">
+                <span class="cog-icon">⚙️</span>
+            </a>
             <h2>Database Schema</h2>
             <p class="relationship">This schema defines the structure and relationships between entities.</p>
-            
+
             <table>
                 <thead>
                     <tr>
@@ -280,7 +353,8 @@
                         <td>Virus</td>
                         <td>virus_id</td>
                         <td>None</td>
-                        <td>name, category, discovery_date, attack_vector, spread_rate, infection_method, damage_potential</td>
+                        <td>name, category, discovery_date, attack_vector, spread_rate, infection_method,
+                            damage_potential</td>
                         <td>1:N with Behaviors and Effects</td>
                     </tr>
                     <tr>
@@ -316,4 +390,5 @@
         </div>
     </div>
 </body>
+
 </html>

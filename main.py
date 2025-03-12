@@ -1,11 +1,17 @@
-from flask import Flask, render_template
+import os
+from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask.cli import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
+from postgres.database import delete_virus, get_virus_by_id, update_virus, add_virus
 
 app = Flask(__name__)
 
-# Correct PostgreSQL URI
-app.config['SQLALCHEMY_DATABASE_URI'] = ""
+load_dotenv()
+DB_URL = os.getenv("DB_URL")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 db = SQLAlchemy(app)
 
@@ -67,6 +73,7 @@ class Behavior(db.Model):
 def index():
     try:
         viruses = Virus.query.all()
+        print(type(viruses[0]))
         operating_systems = OperatingSystem.query.all()
         devices = Device.query.all()
         behaviors = Behavior.query.all()
@@ -83,11 +90,52 @@ def index():
     except Exception as e:
         print(f"🔥 ERROR: {e}")
         return "Database error. Check the terminal for logs."
+    
+# Edit virus page
+@app.route('/edit/<int:virus_id>', methods=['GET', 'POST'])
+def edit_virus(virus_id):
+    virus = get_virus_by_id(virus_id)
+
+    if request.method == 'POST':
+        name = request.form['name']
+        category = request.form['category']
+        discovery_date = request.form['discovery_date']
+        attack_vector = request.form['attack_vector']
+        spread_rate = request.form['spread_rate']
+        infection_method = request.form['infection_method']
+        damage_potential = request.form['damage_potential']
+
+        update_virus(virus_id, name, category, discovery_date, attack_vector, spread_rate, infection_method, damage_potential)
+        return redirect(url_for('index'))  # Redirect back to main page
+
+    return render_template('edit.html', virus=virus)
 
 
-@app.route('/template/important')
-def important_details():
-    return render_template('important.html')
+# Add new virus page
+@app.route('/add', methods=['GET', 'POST'])
+def add_virus_page():
+    if request.method == 'POST':
+        name = request.form['name']
+        category = request.form['category']
+        discovery_date = request.form['discovery_date']
+        attack_vector = request.form['attack_vector']
+        spread_rate = request.form['spread_rate']
+        infection_method = request.form['infection_method']
+        damage_potential = request.form['damage_potential']
+
+        add_virus(name, category, discovery_date, attack_vector, spread_rate, infection_method, damage_potential)
+        return redirect(url_for('index'))
+
+    return render_template('add.html')    
+
+@app.route('/api/delete/<int:virus_id>', methods=['DELETE'])
+def delete_virus_api(virus_id):
+    try:
+        delete_virus(virus_id)  # Call the function
+        return jsonify({"message": "Virus deleted successfully", "virus_id": virus_id}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 
+
 
 if __name__ == '__main__':
     print("🚀 Server starting... Visit http://127.0.0.1:5000/")

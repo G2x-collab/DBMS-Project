@@ -1,0 +1,41 @@
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.main-section {
+    display: flex;
+    gap: 20px;
+}
+
+.side-section {
+    display: flex;
+    gap: 20px;
+}
+
+.bottom-section {
+    display: flex;
+    justify-content: center;
+}
+
+.table-container {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    min-width: 300px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}

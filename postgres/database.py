@@ -68,6 +68,34 @@ def add_virus(name, category, discovery_date, attack_vector, spread_rate, infect
     cur.close()
     conn.close()
 
+def add_or_update_os(name, version, architecture, vulnerability_score):
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # Fetch the latest os_id
+    cur.execute("SELECT COALESCE(MAX(os_id), 0) + 1 FROM operating_system")
+    new_id = cur.fetchone()[0]  # Get the next available ID
+    
+    try:
+        # Try inserting a new OS entry
+        cur.execute("""
+            INSERT INTO operating_system (os_id, name, version, architecture, vulnerability_score) 
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (os_id) DO UPDATE SET
+                name = EXCLUDED.name,
+                version = EXCLUDED.version,
+                architecture = EXCLUDED.architecture,
+                vulnerability_score = EXCLUDED.vulnerability_score
+        """, (new_id, name, version, architecture, vulnerability_score))
+    
+        conn.commit()
+    except psycopg2.Error as e:
+        print("Database Error:", e)
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
+
 
 def delete_virus(virus_id):
     conn = get_connection()
@@ -80,5 +108,66 @@ def delete_virus(virus_id):
     conn.close()
     
     return jsonify({"message": "Virus deleted successfully"})
+
+def get_os_by_id(os_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM operating_system WHERE os_id = %s", (os_id,))
+    os_entry = cur.fetchone()
+
+    cur.close()
+    conn.close()
+    
+    return os_entry
+
+
+def update_os(os_id, name, version, architecture, vulnerability_score):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            UPDATE operating_system 
+            SET name = %s, version = %s, architecture = %s, vulnerability_score = %s 
+            WHERE os_id = %s
+        """, (name, version, architecture, vulnerability_score, os_id))
+
+        conn.commit()
+    except psycopg2.Error as e:
+        print("Database Error:", e)
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
+
+
+def add_os(name, version, architecture, vulnerability_score):
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # Fetch the latest os_id
+    cur.execute("SELECT COALESCE(MAX(os_id), 0) + 1 FROM operating_system")
+    new_id = cur.fetchone()[0]  # Get the next available ID
+    
+    try:
+        # Insert new OS entry
+        cur.execute("""
+            INSERT INTO operating_system (os_id, name, version, architecture, vulnerability_score) 
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (os_id) DO UPDATE SET
+                name = EXCLUDED.name,
+                version = EXCLUDED.version,
+                architecture = EXCLUDED.architecture,
+                vulnerability_score = EXCLUDED.vulnerability_score
+        """, (new_id, name, version, architecture, vulnerability_score))
+    
+        conn.commit()
+    except:
+        print("Database Error:")
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
 
 

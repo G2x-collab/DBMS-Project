@@ -2,13 +2,13 @@ import os
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask.cli import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
-from postgres.database import delete_virus, get_virus_by_id, update_virus, add_virus
+from postgres.database import add_os, delete_virus, get_os_by_id, get_virus_by_id, update_os, update_virus, add_virus
 
 app = Flask(__name__)
 
 load_dotenv()
 DB_URL = os.getenv("DB_URL")
-
+print(DB_URL)
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -90,25 +90,19 @@ def index():
     except Exception as e:
         print(f"🔥 ERROR: {e}")
         return "Database error. Check the terminal for logs."
-    
-# Edit virus page
-@app.route('/edit/<int:virus_id>', methods=['GET', 'POST'])
-def edit_virus(virus_id):
-    virus = get_virus_by_id(virus_id)
 
+@app.route('/add_os', methods=['GET', 'POST'])
+def add_os_page():
     if request.method == 'POST':
         name = request.form['name']
-        category = request.form['category']
-        discovery_date = request.form['discovery_date']
-        attack_vector = request.form['attack_vector']
-        spread_rate = request.form['spread_rate']
-        infection_method = request.form['infection_method']
-        damage_potential = request.form['damage_potential']
+        version = request.form['version']
+        architecture = request.form['architecture']
+        vulnerability_score = request.form['vulnerability_score']
 
-        update_virus(virus_id, name, category, discovery_date, attack_vector, spread_rate, infection_method, damage_potential)
-        return redirect(url_for('index'))  # Redirect back to main page
+        add_os(name, version, architecture, vulnerability_score)
+        return redirect(url_for('index'))
 
-    return render_template('edit.html', virus=virus)
+    return render_template('osadd.html')
 
 
 # Add new virus page
